@@ -1,7 +1,34 @@
-hello_the_world:
-     path:    /hello-world
-     defaults: { _controller: VCPlatformBundle:Advert:index }
 
-goodbye_the_world:
-     path:    /goodbye
-     defaults: { _controller: VCPlatformBundle:Advert:goodbye }
+vc_platform_home:
+    path:      /{page}
+    defaults:
+        _controller: VCPlatformBundle:Advert:index
+        page:         1
+    requirements:
+        page: \d*
+
+vc_platform_view:
+    path:      /advert/{id}
+    defaults:
+        _controller: VCPlatformBundle:Advert:view
+    requirements:
+        id: \d+
+
+vc_platform_add:
+    path:      /add
+    defaults:
+        _controller: VCPlatformBundle:Advert:add
+
+vc_platform_edit:
+    path:      /edit/{id}
+    defaults:
+        _controller: VCPlatformBundle:Advert:edit
+    requirements:
+         id: \d+
+
+vc_platform_delete:
+    path:      /delete/{id}
+    defaults:
+        _controller: VCPlatformBundle:Advert:delete
+    requirements:
+         id: \d+

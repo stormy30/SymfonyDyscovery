@@ -3,7 +3,7 @@
 namespace VC\PlatformBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\RedirectResponse; // Ne pas oublier  ce use!!!
+use Symfony\Component\HttpFoundation\JsonResponse; // ne jamais oublier de modifier le use en fonction de la requette
 use Symfony\Component\HttpFoundation\Response;
 
 class AdvertController extends Controller
@@ -33,10 +33,8 @@ class AdvertController extends Controller
   // On donne à cette méthode l'argument $id, pour
   // correspondre au paramètre {id} de la route
 
-  public function viewAction($id)
-  {
-    // que l'on renvoie du JSON et non du HTML
-    return new JsonResponse(array('id' => $id));
-
-  }
+      public function viewAction($id)
+      {
+          return new JsonResponse(array('id' => $id));
+      }
 }

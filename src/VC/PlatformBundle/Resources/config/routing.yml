@@ -1,7 +1,7 @@
-vc_platform_homepage:
-    path:     /
-    defaults: { _controller: VCPlatformBundle:Default:index }
-
 hello_the_world:
-    path:     /hello-world
-    defaults: { _controller: VCPlatformBundle:Advert:index }
+     path:    /hello-world
+     defaults: { _controller: VCPlatformBundle:Advert:index }
+
+goodbye_the_world:
+     path:    /goodbye
+     defaults: { _controller: VCPlatformBundle:Advert:goodbye }

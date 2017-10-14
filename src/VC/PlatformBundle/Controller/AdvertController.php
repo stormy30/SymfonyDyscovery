@@ -13,18 +13,19 @@ class AdvertController extends Controller
       {
         // On ne sait pas combien de pages il y a
        // Mais on sait qu'une page doit être supérieure ou égale à 1
-        if(page < 1) {
-           // On déclenche une exception NotFoundHttpException, cela va afficher
-           
-          // une page d'erreur 404 (qu'on pourra personnaliser plus tard d'ailleurs)
-          throw new NotFoundHttpException('Page "'.$page.'" inexistante.');
+        // if(page < 1) {
+        //    // On déclenche une exception NotFoundHttpException, cela va afficher
 
-        }
+          // une page d'erreur 404 (qu'on pourra personnaliser plus tard d'ailleurs)
+        //   throw new NotFoundHttpException('Page "'.$page.'" inexistante.');
+        // }
 
          // Ici, on récupérera la liste des annonces, puis on la passera au template
 
         // Mais pour l'instant, on ne fait qu'appeler le template
-        return $this->render('VCPlatformBundle:Advert:index.html.twig');
+        return $this->render('VCPlatformBundle:Advert:index.html.twig', array(
+          'listAdverts' => array()
+        ));
       }
   // La route fait appel à OCPlatformBundle:Advert:view,
   // on doit donc définir la méthode viewAction.
@@ -80,4 +81,22 @@ class AdvertController extends Controller
 
         return $this->render('OCPlatformBundle:Advert:delete.html.twig');
       }
+
+      public function menuAction($limit)
+      {
+        //On fixe en dur une liste ici, bien entendu par la suite
+        //On la récupérera depuis la BDD !
+        $listAdverts = array(
+          array('id' => 2, 'title' => 'Recherche developpeur Symfony'),
+          array('id' => 5, 'title' => 'Mission de webmaster'),
+          array('id' => 9, 'title' => 'Offre de stage webdesigner')
+        );
+
+        return $this->render('VCPlatformBundle:Advert:menu.html.twig', array(
+          //Tout l'intérêt est ici : le contrôleur passe
+          //lesvariables nécessaires au template !
+          'listAdverts' => $listAdverts
+        ));
+      }
+
   }

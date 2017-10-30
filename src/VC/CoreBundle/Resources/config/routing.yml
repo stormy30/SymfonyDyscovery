@@ -1,0 +1,11 @@
+# src/VC/CoreBundle/Resources/config/routing.yml
+
+vc_core_home:
+    path: /
+    defaults:
+        _controller: VCCoreBundle:Core:index
+
+vc_core_contact:
+    path: /contact
+    defaults:
+        _controller: VCCoreBundle:Core:contact

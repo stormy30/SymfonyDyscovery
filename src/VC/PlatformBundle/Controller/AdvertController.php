@@ -1,102 +1,142 @@
 <?php
+// src/VC/PlatformBundle/Controller/AdvertController.php
 
 namespace VC\PlatformBundle\Controller;
 
+use VC\PlatformBundle\Entity\Advert;
+use VC\PlatformBundle\Form\AdvertType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request; // ne jamais oublier de modifier le use en fonction de la requette
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class AdvertController extends Controller
 {
-  // On récupère tous les paramètres en arguments de la méthode
-      public function indexAction($page)
-      {
-        // On ne sait pas combien de pages il y a
-       // Mais on sait qu'une page doit être supérieure ou égale à 1
-        // if(page < 1) {
-        //    // On déclenche une exception NotFoundHttpException, cela va afficher
-
-          // une page d'erreur 404 (qu'on pourra personnaliser plus tard d'ailleurs)
-        //   throw new NotFoundHttpException('Page "'.$page.'" inexistante.');
-        // }
-
-         // Ici, on récupérera la liste des annonces, puis on la passera au template
-
-        // Mais pour l'instant, on ne fait qu'appeler le template
-        return $this->render('VCPlatformBundle:Advert:index.html.twig', array(
-          'listAdverts' => array()
-        ));
-      }
-  // La route fait appel à OCPlatformBundle:Advert:view,
-  // on doit donc définir la méthode viewAction.
-  // On donne à cette méthode l'argument $id, pour
-  // correspondre au paramètre {id} de la route
-
-     public function viewAction($id)
-     {
-       // Ici, on récupérera l'annonce correspondante à l'id $id
-       return $this->render('VCPlatformBundle:Advert:view.html.twig', array(
-         'id' => $id
-       ));
-     }
-
-      public function addAction(Request $request)
-      {
-        // La gestion d'un formulaire est particulière, mais l'idée est la suivante :
-
-       // Si la requête est en POST, c'est que le visiteur a soumis le formulaire
-       if ($request->isMethod('POST')) {
-        // Ici, on s'occupera de la création et de la gestion du formulaire
-
-         $request->getSession()->getFlashBag()->add('notice', 'Annonce bien enregistrée.');
-
-         // Puis on redirige vers la page de visualisation de cettte annonce
-         return $this->redirectToRoute('vc_platform_view', array('id' => 5));
-        }
-
-       // Si on n'est pas en POST, alors on affiche le formulaire
-        return $this-render('VCPlatformBundle:Advert:add.html.twig');
-      }
-
-      public function editAction($id, Request $request)
-      {
-      // Ici, on récupérera l'annonce correspondante à l'id
-
-      // Même mécanisme que pour l'ajout
-      if ($request->isMethod('POST')) {
-        $request->getSession()->getFlashBag()->add('notice', 'Annonce bien modifiée.');
-
-        return $this->redirectToRoute('vc_platform_view', array('id' => 5));
-       }
-
-      return $this->render('VCPlatformBundle:advert:edit.html.twig');
-     }
-
-      public function deleteAction($id)
-      {
-        // Ici, on récupérera l'annonce correspondant à $id
-
-       // Ici, on gérera la suppression de l'annonce en question
-
-
-        return $this->render('OCPlatformBundle:Advert:delete.html.twig');
-      }
-
-      public function menuAction($limit)
-      {
-        //On fixe en dur une liste ici, bien entendu par la suite
-        //On la récupérera depuis la BDD !
-        $listAdverts = array(
-          array('id' => 2, 'title' => 'Recherche developpeur Symfony'),
-          array('id' => 5, 'title' => 'Mission de webmaster'),
-          array('id' => 9, 'title' => 'Offre de stage webdesigner')
-        );
-
-        return $this->render('VCPlatformBundle:Advert:menu.html.twig', array(
-          //Tout l'intérêt est ici : le contrôleur passe
-          //lesvariables nécessaires au template !
-          'listAdverts' => $listAdverts
-        ));
-      }
-
+  public function indexAction($page)
+  {
+    if ($page < 1) {
+      throw new NotFoundHttpException('Page "'.$page.'" inexistante.');
+    }
+    // Ici je fixe le nombre d'annonces par page à 3
+    // Mais bien sûr il faudrait utiliser un paramètre, et y accéder via $this->container->getParameter('nb_per_page')
+    $nbPerPage = 3;
+    // On récupère notre objet Paginator
+    $listAdverts = $this->getDoctrine()
+      ->getManager()
+      ->getRepository('VCPlatformBundle:Advert')
+      ->getAdverts($page, $nbPerPage)
+    ;
+    // On calcule le nombre total de pages grâce au count($listAdverts) qui retourne le nombre total d'annonces
+    $nbPages = ceil(count($listAdverts) / $nbPerPage);
+    // Si la page n'existe pas, on retourne une 404
+    if ($page > $nbPages) {
+      throw $this->createNotFoundException("La page ".$page." n'existe pas.");
+    }
+    // On donne toutes les informations nécessaires à la vue
+    return $this->render('VCPlatformBundle:Advert:index.html.twig', array(
+      'listAdverts' => $listAdverts,
+      'nbPages'     => $nbPages,
+      'page'        => $page,
+    ));
   }
+  public function viewAction($id)
+  {
+    $em = $this->getDoctrine()->getManager();
+    // Pour récupérer une seule annonce, on utilise la méthode find($id)
+    $advert = $em->getRepository('VCPlatformBundle:Advert')->find($id);
+    // $advert est donc une instance de OC\PlatformBundle\Entity\Advert
+    // ou null si l'id $id n'existe pas, d'où ce if :
+    if (null === $advert) {
+      throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    }
+    // Récupération de la liste des candidatures de l'annonce
+    $listApplications = $em
+      ->getRepository('VCPlatformBundle:Application')
+      ->findBy(array('advert' => $advert))
+    ;
+    // Récupération des AdvertSkill de l'annonce
+    $listAdvertSkills = $em
+      ->getRepository('VCPlatformBundle:AdvertSkill')
+      ->findBy(array('advert' => $advert))
+    ;
+    return $this->render('VCPlatformBundle:Advert:view.html.twig', array(
+      'advert'           => $advert,
+      'listApplications' => $listApplications,
+      'listAdvertSkills' => $listAdvertSkills,
+    ));
+  }
+
+
+  public function addAction(Request $request)
+  {
+    // On crée un objet Advert
+    $advert = new Advert();
+    $form   = $this->get('form.factory')->create(AdvertType::class, $advert);
+
+        // Si la requête est en POST
+    if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
+        // On enregistre notre objet $advert dans la base de données, par exemple
+      $em = $this->getDoctrine()->getManager();
+      $em->persist($advert);
+      $em->flush();
+
+      $request->getSession()->getFlashBag()->add('notice', 'Annonce bien enregistrée.');
+
+        // On redirige vers la page de visualisation de l'annonce nouvellement créée
+      return $this->redirectToRoute('vc_platform_view', array('id' => $advert->getId()));
+      }
+
+
+  return $this->render('VCPlatformBundle:Advert:add.html.twig', array(
+    'form' => $form->createView(),
+  ));
+    }
+
+
+
+  public function editAction($id, Request $request)
+  {
+    $em = $this->getDoctrine()->getManager();
+    $advert = $em->getRepository('VCPlatformBundle:Advert')->find($id);
+    if (null === $advert) {
+      throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    }
+    // Ici encore, il faudra mettre la gestion du formulaire
+    if ($request->isMethod('POST')) {
+      $request->getSession()->getFlashBag()->add('notice', 'Annonce bien modifiée.');
+      return $this->redirectToRoute('vc_platform_view', array('id' => $advert->getId()));
+    }
+    return $this->render('VCPlatformBundle:Advert:edit.html.twig', array(
+      'advert' => $advert
+    ));
+  }
+  public function deleteAction($id)
+  {
+    $em = $this->getDoctrine()->getManager();
+    $advert = $em->getRepository('VCPlatformBundle:Advert')->find($id);
+    if (null === $advert) {
+      throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    }
+    // On boucle sur les catégories de l'annonce pour les supprimer
+    foreach ($advert->getCategories() as $category) {
+      $advert->removeCategory($category);
+    }
+    $em->flush();
+
+    return $this->render('VCPlatformBundle:Advert:delete.html.twig');
+  }
+  public function menuAction($limit)
+  {
+    $em = $this->getDoctrine()->getManager();
+
+    $listAdverts = $em->getRepository('VCPlatformBundle:Advert')->findBy(
+      array(),                 // Pas de critère
+      array('date' => 'desc'), // On trie par date décroissante
+      $limit,                  // On sélectionne $limit annonces
+      0                     // À partir du premier
+    );
+
+    return $this->render('VCPlatformBundle:Advert:menu.html.twig', array(
+      'listAdverts' => $listAdverts
+    ));
+  }
+}

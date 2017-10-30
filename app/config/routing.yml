@@ -1,3 +1,6 @@
 vc_platform:
     resource: "@VCPlatformBundle/Resources/config/routing.yml"
     prefix:   /platform
+
+vc_core:
+    resource: "@VCCoreBundle/Resources/config/routing.yml"

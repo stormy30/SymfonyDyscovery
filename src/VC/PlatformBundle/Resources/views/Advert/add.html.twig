@@ -2,7 +2,11 @@
 
 {% extends "VCPlatformBundle::layout.html.twig" %}
 
-{% block body %}
+{% block title %}
+  Ajouter une annonce - {{ parent() }}
+{% endblock %}
+
+{% block vcplatform_body %}
 
   <h2>Ajouter une annonce</h2>
 
@@ -12,5 +16,6 @@
   Attention / cette annonce sera ajoutée directement
   sur la page d'accueil après validation du formulaire
 <p>
+
 
 {% endblock %}

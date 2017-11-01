@@ -4,6 +4,7 @@
 namespace VC\PlatformBundle\Controller;
 
 use VC\PlatformBundle\Entity\Advert;
+use VC\PlatformBundle\Form\AdvertEditType;
 use VC\PlatformBundle\Form\AdvertType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -70,7 +71,7 @@ class AdvertController extends Controller
   {
     // On crée un objet Advert
     $advert = new Advert();
-    $form   = $this->get('form.factory')->create(AdvertType::class, $advert);
+    $form = $this->get('form.factory')->create(AdvertType::class, $advert);
 
         // Si la requête est en POST
     if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
@@ -96,34 +97,61 @@ class AdvertController extends Controller
   public function editAction($id, Request $request)
   {
     $em = $this->getDoctrine()->getManager();
+
     $advert = $em->getRepository('VCPlatformBundle:Advert')->find($id);
+
     if (null === $advert) {
       throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
     }
+
+    $form = $this->get('form.factory')->create(AdvertEditType::class, $advert);
     // Ici encore, il faudra mettre la gestion du formulaire
-    if ($request->isMethod('POST')) {
+    if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
+      // Inutile de persister ici, Doctrine connait déjà notre annonce
+      $em->flush();
+
       $request->getSession()->getFlashBag()->add('notice', 'Annonce bien modifiée.');
+
       return $this->redirectToRoute('vc_platform_view', array('id' => $advert->getId()));
     }
+
     return $this->render('VCPlatformBundle:Advert:edit.html.twig', array(
-      'advert' => $advert
+      'advert' => $advert,
+      'form'   => $form->createView(),
     ));
   }
-  public function deleteAction($id)
+
+
+  public function deleteAction(Request $request, $id)
   {
     $em = $this->getDoctrine()->getManager();
+
     $advert = $em->getRepository('VCPlatformBundle:Advert')->find($id);
+
     if (null === $advert) {
       throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
     }
-    // On boucle sur les catégories de l'annonce pour les supprimer
-    foreach ($advert->getCategories() as $category) {
-      $advert->removeCategory($category);
-    }
-    $em->flush();
 
-    return $this->render('VCPlatformBundle:Advert:delete.html.twig');
+    // On crée un formulaire vide, qui ne contiendra que le champ CSRF
+    // Cela permet de protéger la suppression d'annonce contre cette faille
+    $form =$this->get('form.factory')->create();
+
+    if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
+      $em->remove($advert);
+      $em->flush();
+
+    $request->getSession()->getFlashBag()->add('info', "L'annonce à bine été supprimée.");
+
+    return $this->redirectToRoute('vc_platform_home');
   }
+
+    return $this->render('VCPlatformBundle:Advert:delete.html.twig', array(
+      'advert' =>$advert,
+      'form'   =>$form->createView(),
+    ));
+  }
+
+
   public function menuAction($limit)
   {
     $em = $this->getDoctrine()->getManager();

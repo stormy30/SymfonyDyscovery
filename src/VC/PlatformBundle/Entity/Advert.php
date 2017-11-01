@@ -5,7 +5,10 @@ namespace VC\PlatformBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
-
+// N'oubliez pas de rajouter ce « use », il définit le namespace pour les annotations de validation
+use Symfony\Component\Validator\Constraints as Assert;
+use VC\PlatformBundle\Validator\Antiflood;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 /**
  * Advert
  *
@@ -22,7 +25,8 @@ class Advert
     private $categories;
 
   /**
-     * @ORM\OneToOne(targetEntity="VC\PlatformBundle\Entity\Image", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="VC\PlatformBundle\Entity\Image", cascade={"persist", "remove"})
+     * @Assert\Valid()
      */
     private $image;
 
@@ -44,13 +48,15 @@ class Advert
      * @var \DateTime
      *
      * @ORM\Column(name="date", type="datetime")
+     *@Assert\DateTime()
      */
     private $date;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="title", type="string", length=255)
+     * @ORM\Column(name="title", type="string", length=255, unique=true)
+     * @Assert\Length(min=10)
      */
     private $title;
 
@@ -58,6 +64,7 @@ class Advert
      * @var string
      *
      * @ORM\Column(name="author", type="string", length=255)
+     * @Assert\length(min=2)
      */
     private $author;
 
@@ -65,6 +72,8 @@ class Advert
      * @var string
      *
      * @ORM\Column(name="content", type="text")
+     * @Assert\NotBlank()
+     * @Antiflood()
      */
     private $content;
 
@@ -96,12 +105,14 @@ class Advert
       $this->applications = new ArrayCollection();
     }
 
+
+
     /**
      * @ORM\PreUpdate
      */
     public function updateDate()
     {
-    $this->setUpdatedAt(new \Datetime());
+    $this->setUpdateAt(new \Datetime());
     }
 
     public function increaseApplication()
@@ -382,4 +393,47 @@ class Advert
     {
         return $this->updateAt;
     }
+
+    // public function testAction()
+    // {
+    //   $advert = new Advert;
+    //
+    //   $advert->setDate(new_Datetime()); //champs "date" Ok
+    //   $advert->setTitle('abc');        //champs "title" incorect : moins de 10 caractères
+    //   //$advert-> setContent('blabla') // champ "content" incorrect : on ne le definit pas.
+    //   $advert->setAuthor('A');        // champs "author" incorrect: moins de 2 cararatères
+    //
+    //   //On récupère le service Validator
+    //   $validator =$this->get('validator');
+    //
+    //   // on déclenche la validation sur notre object
+    //   $listErrors = $validator->validate($advert);
+    //
+    //   // di $listErroes n'est pas vide, on affiche les erreurs
+    //   if(count($listErrors) >0) {
+    //      // $listErrors est un objet, sa méthode __toString permet de lister joliement les erreurs
+    //      return new Response((string) $listErrors);
+    //   } else {
+    //     return new Response("L'annonce est valide !");
+    //   }
+    //
+    // }
+
+    /**
+     * @Assert\Callback
+     */
+    public function isContentValid(ExecutionContextInterface $context)
+    {
+      $forbiddenWords = array('démotivation', 'abandon');
+      // On vérifie que le contenu ne contient pas l'un des mots
+      if (preg_match('#'.implode('|', $forbiddenWords).'#', $this->getContent())) {
+        // La règle est violée, on définit l'erreur
+        $context
+          ->buildViolation('Contenu invalide car il contient un mot interdit.') // message
+          ->atPath('content')                                                   // attribut de l'objet qui est violé
+          ->addViolation() // ceci déclenche l'erreur, ne l'oubliez pas
+        ;
+      }
+    }
+
 }

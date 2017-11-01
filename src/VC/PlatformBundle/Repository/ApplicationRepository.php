@@ -26,4 +26,24 @@ class ApplicationRepository extends EntityRepository
       ->getResult()
       ;
   }
+
+  /**
+   * @param string   $ip
+   * @param integer  $seconds
+   * @return bool    True si au moins une candidature créée il y a moins de $seconds secondes a été trouvée. False sinon.
+   */
+   public function isFlood($ip, $seconds)
+   {
+     return (bool) $this->createQueryBuilder('a')
+        ->select('COUNT(a)')
+        ->where('a.date >= :date')
+        ->setParameter('date', new \Datetime($seconds.' second ago'))
+         // Nous n'avons pas cet attribut, je laisse en commentaire, mais voici comment pourrait être la condition :
+         //->andWhere('a.ip = :ip')->setParameter('ip', $ip)
+        ->getQuery()
+        ->getSingleScalarResult()
+      ;    
+   }
+
+
 }

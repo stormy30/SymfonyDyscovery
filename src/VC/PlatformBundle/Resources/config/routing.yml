@@ -1,11 +1,13 @@
 
+# src/OC/PlatformBundle/Resources/config/routing.yml
+
 vc_platform_home:
     path:      /{page}
     defaults:
         _controller: VCPlatformBundle:Advert:index
-        page:         1
+        page:    1
     requirements:
-        page: \d*
+        page: \d+
 
 vc_platform_view:
     path:      /advert/{id}
@@ -24,11 +26,18 @@ vc_platform_edit:
     defaults:
         _controller: VCPlatformBundle:Advert:edit
     requirements:
-         id: \d+
+        id: \d+
 
 vc_platform_delete:
     path:      /delete/{id}
     defaults:
         _controller: VCPlatformBundle:Advert:delete
     requirements:
-         id: \d+
+        id: \d+
+
+vc_platform_purge:
+    path:     /purge/{days}
+    defaults:
+        _controller: VCPlatformBundle:Advert:purge
+    requirements:
+        days: \d+

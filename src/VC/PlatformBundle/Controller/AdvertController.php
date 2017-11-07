@@ -15,7 +15,7 @@ class AdvertController extends Controller
   public function indexAction($page)
   {
     if ($page < 1) {
-      throw new NotFoundHttpException('Page "'.$page.'" inexistante.');
+      throw $this->createNotFoundException('Page "'.$page.'" inexistante.');
     }
     // Ici je fixe le nombre d'annonces par page à 3
     // Mais bien sûr il faudrait utiliser un paramètre, et y accéder via $this->container->getParameter('nb_per_page')
@@ -167,4 +167,19 @@ class AdvertController extends Controller
       'listAdverts' => $listAdverts
     ));
   }
+
+  // Méthode facultative pour tester la purge
+   public function purgeAction($days, Request $request)
+   {
+     // On récupère notre service
+     $purger = $this->get('vc_platform.purger.advert');
+     // On purge les annonces
+     $purger->purge($days);
+     // On ajoute un message flash arbitraire
+     $request->getSession()->getFlashBag()->add('info', 'Les annonces plus vieilles que '.$days.' jours ont été purgées.');
+     // On redirige vers la page d'accueil
+     return $this->redirectToRoute('vc_platform_home');
+   }
+
+
 }

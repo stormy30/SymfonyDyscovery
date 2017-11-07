@@ -9,6 +9,18 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 
 class AdvertRepository extends EntityRepository
 {
+  public function getAdvertsBefore(\Datetime $date)
+    {
+      return $this->createQueryBuilder('a')
+        ->where('a.updatedAt <= :date')                      // Date de modification antérieure à :date
+        ->orWhere('a.updatedAt IS NULL AND a.date <= :date') // Si la date de modification est vide, on vérifie la date de création
+        ->andWhere('a.applications IS EMPTY')                // On vérifie que l'annonce ne contient aucune candidature
+        ->setParameter('date', $date)
+        ->getQuery()
+        ->getResult()
+        ;
+    }
+
   public function getAdverts($page, $nbPerPage)
   {
     $query = $this->createQueryBuilder('a')
@@ -40,7 +52,7 @@ class AdvertRepository extends EntityRepository
       ->from($this->_entityName, 'a')
     ;
     // Dans un repository, $this->_entityName est le namespace de l'entité gérée
-    // Ici, il vaut donc OC\PlatformBundle\Entity\Advert
+    // Ici, il vaut donc VC\PlatformBundle\Entity\Advert
 
     // Méthode 2 : en passant par le raccourci (je recommande)
     $queryBuilder = $this->createQueryBuilder('a');

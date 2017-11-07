@@ -42,8 +42,6 @@ class ApplicationRepository extends EntityRepository
          //->andWhere('a.ip = :ip')->setParameter('ip', $ip)
         ->getQuery()
         ->getSingleScalarResult()
-      ;    
+      ;
    }
-
-
 }

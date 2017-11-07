@@ -26,3 +26,8 @@ services:
     arguments: ["@request_stack", "@doctrine.orm.entity_manager"] # Les données qu'on injecte au service : la requête et l'entity_manager
     tags:
         - { name: validator.constraint_validator, alias: vc_platform_antiflood } # c'est avc l'alias qu'on retrouvera le service
+
+  vc_platform.purger.advert:
+    class: VC\PlatformBundle\Purger\AdvertPurger
+    arguments:
+        - "@doctrine.orm.entity_manager"

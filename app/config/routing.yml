@@ -1,6 +1,21 @@
+
+
 vc_platform:
     resource: "@VCPlatformBundle/Resources/config/routing.yml"
     prefix:   /platform
 
 vc_core:
     resource: "@VCCoreBundle/Resources/config/routing.yml"
+
+
+
+login:
+    path: /login
+    defaults:
+        _controller: VCUserBundle:Security:login
+
+login_check:
+    path: /login_check
+
+logout:
+    path: /logout

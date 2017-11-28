@@ -3,15 +3,20 @@
 
 namespace VC\PlatformBundle\Controller;
 
+use Symfony\Component\Finder\Exception\AccessDeniedException;
 use VC\PlatformBundle\Entity\Advert;
 use VC\PlatformBundle\Form\AdvertEditType;
 use VC\PlatformBundle\Form\AdvertType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+
+
 
 class AdvertController extends Controller
 {
+
   public function indexAction($page)
   {
     if ($page < 1) {
@@ -66,9 +71,16 @@ class AdvertController extends Controller
     ));
   }
 
-
+    /**
+     * @Security("has_role('ROLE_AUTEUR')")
+     */
   public function addAction(Request $request)
   {
+     // Plus besoin du if avec le security.context, l'annotation s'occupe de tout !
+      // Dans cette méthode, vous êtes sûrs que l'utilisateur courant dispose du rôle ROLE_AUTEUR
+   // Ici l'utilisateur a les droits suffisant,
+
+    // on peut ajouter une annonce:
     // On crée un objet Advert
     $advert = new Advert();
     $form = $this->get('form.factory')->create(AdvertType::class, $advert);
